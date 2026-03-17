@@ -97,14 +97,32 @@ def generate_report(result, output_path: str = "eval_report.csv"):
     
     # Suggestions based on performance
     print("\n--- Debugging Guide ---")
-    if result["faithfulness"] < 0.85:
-        print("💡 Low faithfulness → stricter system prompt, lower temperature")
-    if result["answer_relevancy"] < 0.80:
-        print("💡 Low answer_relevancy → rewrite prompt, add instructions")
-    if result["context_precision"] < 0.75:
-        print("💡 Low context_precision → better chunking, add re-ranking")
-    if result["context_recall"] < 0.80:
-        print("💡 Low context_recall → increase k, improve embeddings")
+    if result is None:
+        print("💡 No result to analyze. Make sure Ragas is installed and configured.")
+        return
+        
+    try:
+        report_df = result.to_pandas()
+        if report_df.empty:
+            print("💡 Evaluation dataset was empty.")
+            return
+            
+        scores = report_df.mean(numeric_only=True)
+        
+        # Check for specific metrics and provide targeted advice
+        metrics_advice = {
+            "faithfulness": (0.85, "💡 Low average faithfulness → stricter system prompt, lower temperature"),
+            "answer_relevancy": (0.80, "💡 Low average answer_relevancy → rewrite prompt, add instructions"),
+            "context_precision": (0.75, "💡 Low average context_precision → better chunking, add re-ranking"),
+            "context_recall": (0.80, "💡 Low average context_recall → increase k, improve embeddings")
+        }
+        
+        for metric, (threshold, advice) in metrics_advice.items():
+            if metric in scores and scores[metric] < threshold:
+                print(advice)
+                
+    except Exception as e:
+        logger.error(f"Error generating debugging guide: {e}")
 
 
 def compare_strategies(results_a, results_b, name_a="recursive", name_b="semantic"):

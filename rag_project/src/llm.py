@@ -76,30 +76,38 @@ def generate_answer(question: str, chunks: List[Any], model: str = "glm-4-flash"
     
     system_p, user_p = build_prompt(question, chunks)
     
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_p},
-            {"role": "user", "content": user_p},
-        ],
-        temperature=0.1,
-        max_tokens=1024,
-        top_p=0.9
-    )
-    
-    # Extract sources for the UI
-    sources = list(set([
-        (c.metadata.get("source_file") or c.metadata.get("source_url")) 
-        if hasattr(c, 'metadata') else (c.get('metadata', {}).get("source_file") or c.get('metadata', {}).get("source_url"))
-        for c in chunks
-    ]))
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_p},
+                {"role": "user", "content": user_p},
+            ],
+            temperature=0.1,
+            max_tokens=1024,
+            top_p=0.9
+        )
+        
+        # Extract sources for the UI
+        sources = list(set([
+            (c.metadata.get("source_file") or c.metadata.get("source_url")) 
+            if hasattr(c, 'metadata') else (c.get('metadata', {}).get("source_file") or c.get('metadata', {}).get("source_url"))
+            for c in chunks
+        ]))
 
-    return {
-        "answer": response.choices[0].message.content,
-        "model": model,
-        "tokens_used": response.usage.total_tokens,
-        "sources": sources
-    }
+        return {
+            "answer": response.choices[0].message.content,
+            "model": model,
+            "tokens_used": response.usage.total_tokens,
+            "sources": sources
+        }
+    except Exception as e:
+        logger.error(f"ZhipuAI Error: {e}")
+        return {
+            "error": str(e),
+            "answer": f"⚠️ **Error during generation**: {str(e)}",
+            "sources": []
+        }
 
 
 def generate_streaming(question: str, chunks: List[Any], model: str = "glm-4-flash") -> Generator[str, None, None]:
@@ -117,21 +125,26 @@ def generate_streaming(question: str, chunks: List[Any], model: str = "glm-4-fla
     
     system_p, user_p = build_prompt(question, chunks)
     
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_p},
-            {"role": "user", "content": user_p},
-        ],
-        temperature=0.1,
-        max_tokens=1024,
-        top_p=0.9,
-        stream=True
-    )
-    
-    for chunk in response:
-        if chunk.choices[0].delta.content:
-            yield chunk.choices[0].delta.content
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_p},
+                {"role": "user", "content": user_p},
+            ],
+            temperature=0.1,
+            max_tokens=1024,
+            top_p=0.9,
+            stream=True
+        )
+        
+        for chunk in response:
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        logger.error(f"ZhipuAI Streaming Error: {e}")
+        yield f"⚠️ **Connection Error with ZhipuAI**: {str(e)}\n\n"
+        yield "Check your internet connection or API key."
 
 if __name__ == "__main__":
     print("LLM Module Step 6 Verified.")
