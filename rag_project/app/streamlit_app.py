@@ -20,12 +20,16 @@ from src.embeddings import build_vectorstore
 from src.retrieval import retrieve_and_rerank
 from src.llm import generate_streaming
 
+# --- Dynamic Paths ---
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+LOGO_PATH = PROJECT_ROOT / "public" / "logo.svg"
+
 # ============================================
 # 1. Professional Page Configuration
 # ============================================
 st.set_page_config(
     page_title="RAG Systems - Production Interface",
-    page_icon=None,
+    page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else None,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -48,6 +52,16 @@ st.markdown("""
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
         color: var(--text-main);
+    }
+
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: var(--surface);
+        border-right: 1px solid var(--border);
+    }
+    
+    [data-testid="stSidebarNav"] {
+        background-color: var(--surface);
     }
 
     /* Professional Header */
@@ -112,10 +126,6 @@ st.markdown("""
     }
 
     /* Sidebar Refinement */
-    .sidebar .sidebar-content {
-        background: var(--surface);
-    }
-    
     .stTabs [data-baseweb="tab-list"] {
         border-bottom: 1px solid var(--border);
         margin-bottom: 1.5rem;
@@ -124,6 +134,11 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] {
         font-weight: 600 !important;
         font-size: 0.9rem !important;
+    }
+    
+    /* Better spacing for sidebar elements */
+    .stSlider {
+        margin-bottom: 1rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -143,9 +158,63 @@ if "eval_report" not in st.session_state:
 # ============================================
 # 3. Sidebar: Control Panel
 # ============================================
+
 with st.sidebar:
+    # Header with Logo
+    col1, _ = st.columns([1, 2])
+    with col1:
+        if LOGO_PATH.exists():
+            st.image(str(LOGO_PATH), use_container_width=True)
+    
     st.title("Control Panel")
-    st.caption("Engine Version 2.4.0 (Enterprise)")
+    st.markdown("<p style='color:var(--text-muted); font-size:0.85rem; margin-top:-1rem;'>Production Engine v2.4.0</p>", unsafe_allow_html=True)
+    
+    st.divider()
+    
+    # Knowledge Management
+    with st.expander("Storage Management", expanded=True):
+        files = st.file_uploader("Select Knowledge Sources", type="pdf", accept_multiple_files=True)
+        if st.button("Sync Data Nodes", type="primary", use_container_width=True):
+            if files:
+                with st.status("Performing Indexing...", expanded=False) as status:
+                    with tempfile.TemporaryDirectory() as d:
+                        repo_meta = []
+                        for f in files:
+                            f_path = os.path.join(d, f.name)
+                            with open(f_path, "wb") as out:
+                                out.write(f.getbuffer())
+                            repo_meta.append({"name": f.name, "size": f.size / 1024 / 1024})
+                        
+                        docs = load_pdfs(d)
+                        chunks = recursive_chunk(docs)
+                        st.session_state.vectorstore = build_vectorstore(chunks)
+                        st.session_state.indexed_docs = repo_meta
+                    status.update(label=f"Active Sync: {len(chunks)} Nodes", state="complete")
+            else:
+                st.warning("No data sources detected.")
+
+    st.divider()
+    
+    # Operational Status
+    st.subheader("System Status")
+    s_col1, s_col2 = st.columns(2)
+    with s_col1:
+        st.metric("Sources", len(st.session_state.indexed_docs))
+    with s_col2:
+        count = st.session_state.vectorstore._collection.count() if st.session_state.vectorstore else 0
+        st.metric("Vector Nodes", count)
+
+    st.divider()
+    
+    # Hyper-Parameters
+    st.subheader("Inference Configuration")
+    t_val = st.slider("Fluidity Level", 0.0, 1.0, 0.1, 0.05)
+    k_val = st.select_slider("Context Window", options=[3, 5, 7, 10, 15], value=7)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Reset Session State", use_container_width=True, help="Purges all temporary vector data and chat history"):
+        st.session_state.clear()
+        st.rerun()
     
     st.divider()
     
