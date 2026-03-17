@@ -31,7 +31,7 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - ZHIPUAI_API_KEY=${ZHIPUAI_API_KEY}
+      - ZHIPUAI_API_KEY=92c21ac21209498f962b48fb758a71e1.UbVRGp7qGWBrxOgv
       - STREAMLIT_SERVER_HEADLESS=true
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0
@@ -43,12 +43,11 @@ services:
       # - ./app:/app/app
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8501/_stcore/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-
   # ============================================
   # Optional: ChromaDB Standalone (for production)
   # ============================================
