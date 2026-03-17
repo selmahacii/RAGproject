@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, List, Optional
 from loguru import logger
 from tqdm import tqdm
-import pandas as pd
 from langchain_core.documents import Document as LCDocument
 
 # Step 2 Implementation
@@ -118,6 +117,7 @@ def load_csv(path: str, text_col: str, meta_cols: Optional[List[str]] = None) ->
         meta_cols = []
         
     try:
+        import pandas as pd
         df = pd.read_csv(path)
         docs = []
         
