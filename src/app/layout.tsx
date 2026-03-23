@@ -14,24 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "Selma Search Hub",
+  description: "Modern search hub for high-performance data processing. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
+  keywords: ["Selma", "Haci", "Search Hub", "Data", "Efficiency"],
+  authors: [{ name: "Selma Haci" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Selma Search Hub",
+    description: "Empowering business with modern search solutions",
+    url: "https://selma.haci.com",
+    siteName: "Selma Search Hub",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "Selma Search Hub",
+    description: "Empowering business with modern search solutions",
   },
 };
 

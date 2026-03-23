@@ -18,7 +18,7 @@ export default function Home() {
       }}>
         <img
           src="/logo.svg"
-          alt="Z.ai Logo"
+          alt="Logo"
           style={{
             width: '100%',
             height: '100%',
